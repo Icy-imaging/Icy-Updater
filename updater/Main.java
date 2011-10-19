@@ -361,6 +361,7 @@ public class Main
                     if (stderr.ready())
                         System.err.println(stderr.readLine());
 
+                    System.out.println();
                     System.out.println("Try to manually launch the following command :");
                     System.out.println("java -jar updater.jar");
                 }
