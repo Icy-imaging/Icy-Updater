@@ -218,6 +218,9 @@ public class Main
                 // update XML version file
                 setState("Updating XML...", 90);
 
+                // validate elements (this actually remove obsoletes files)
+                Updater.validateElements(localElements);
+
                 if (!Updater.saveElementsToXML(localElements, Updater.VERSION_NAME, false))
                 {
                     System.err.println("Error while saving " + Updater.VERSION_NAME + " file.");
