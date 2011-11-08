@@ -233,7 +233,7 @@ public class Main
         }
 
         if (result)
-            setState("Success !", 100);
+            setState("Succeed !", 100);
         else
             setState("Failed !", 100);
 
