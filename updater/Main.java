@@ -150,40 +150,27 @@ public class Main
     public static boolean doUpdate()
     {
         final ArrayList<ElementDescriptor> localElements = Updater.getLocalElements();
-        final ArrayList<ElementDescriptor> updateElements = Updater.getUpdateList();
+        final ArrayList<ElementDescriptor> updateElements = Updater.getUpdateElements(localElements);
         boolean result = true;
 
         // get list of element to update
         for (ElementDescriptor updateElement : updateElements)
         {
-            final int progress = (updateElements.indexOf(updateElement) * 60) / updateElements.size();
             final String updateElementName = updateElement.getName();
 
             // can't update updater here (it should be already updated)
             if (updateElementName.equals(Updater.ICYUPDATER_NAME))
-                continue;
-
-            setState("Updating : " + updateElementName, progress);
-
-            // find corresponding current local element
-            final ElementDescriptor localElement = Updater.findElement(updateElementName, localElements);
-
-            // move files (ICY Updater already updated)
-            if (Updater.updateFiles(updateElement.getFiles()))
             {
-                // local element doesn't exist
-                if (localElement == null)
-                    // add it
-                    localElements.add(updateElement);
-                else
-                {
-                    // remove old local element
-                    localElements.remove(localElement);
-                    // and replace it by new updated element
-                    localElements.add(updateElement);
-                }
+                // just update local element with update element info
+                Updater.updateElementInfos(updateElement, localElements);
+                continue;
             }
-            else
+
+            setState("Updating : " + updateElementName,
+                    (updateElements.indexOf(updateElement) * 60) / updateElements.size());
+
+            // update element
+            if (!Updater.udpateElement(updateElement, localElements))
             {
                 // error while updating, no need to go further...
                 result = false;
@@ -191,7 +178,7 @@ public class Main
             }
         }
 
-        // some files hasn't be udpated ?
+        // some files hasn't be updated ?
         setState("Checking...", 60);
         if (!result)
         {
@@ -208,7 +195,10 @@ public class Main
                 FileUtil.delete(Updater.BACKUP_DIRECTORY, true);
             }
             else
-                System.err.println("Can't restore all files.");
+            {
+                System.err.println("Some files cannot be restored.");
+                System.err.println("If ICY doesn't start anymore you may need to reinstall the application.");
+            }
         }
         else
         {
@@ -221,17 +211,22 @@ public class Main
             FileUtil.delete(Updater.UPDATE_DIRECTORY, true);
             FileUtil.delete(Updater.BACKUP_DIRECTORY, true);
 
-            // update XML version file
-            setState("Updating XML...", 90);
-            if (!Updater.saveElementsToXML(localElements, Updater.VERSION_NAME, false))
-            {
-                System.err.println("Error while updating " + Updater.VERSION_NAME + " file.");
-                result = false;
-            }
-            else if (updateElements.size() == 0)
+            if (updateElements.size() == 0)
                 System.out.println("Nothing to update.");
             else
-                System.out.println("Update succefully completed.");
+            {
+                // update XML version file
+                setState("Updating XML...", 90);
+
+                if (!Updater.saveElementsToXML(localElements, Updater.VERSION_NAME, false))
+                {
+                    System.err.println("Error while saving " + Updater.VERSION_NAME + " file.");
+                    System.out.println("The new version is correctly installed but your version informations");
+                    System.out.println("will stay outdated until the next update.");
+                }
+                else
+                    System.out.println("Update succefully completed.");
+            }
         }
 
         if (result)
