@@ -190,13 +190,16 @@ public class Main
             // restore backup
             if (Updater.restore())
             {
+                System.out.println("");
                 System.out.println("Files correctly restored.");
                 // delete backup directory as we don't need it anymore
                 FileUtil.delete(Updater.BACKUP_DIRECTORY, true);
             }
             else
             {
-                System.err.println("Some files cannot be restored.");
+                System.err.println("");
+                System.err
+                        .println("Some files cannot be restored, try to restore them manually from 'backup' directory.");
                 System.err.println("If ICY doesn't start anymore you may need to reinstall the application.");
             }
         }
