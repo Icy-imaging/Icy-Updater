@@ -3,6 +3,7 @@
  */
 package updater;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.HeadlessException;
@@ -106,22 +107,24 @@ public class UpdateFrame extends JFrame
 
     public void build()
     {
-        setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
+        setLayout(new BorderLayout());
 
+        final JPanel topPanel = new JPanel();
         final JPanel mainPanel = new JPanel();
+        final JPanel bottomPanel = new JPanel();
 
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.PAGE_AXIS));
+        topPanel.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+        bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.LINE_AXIS));
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
 
         final JPanel labelPanel = new JPanel();
         final JPanel progressPanel = new JPanel();
-        final JPanel infoPanel = new JPanel();
-        final JPanel buttonPanel = new JPanel();
 
         labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.LINE_AXIS));
         progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.LINE_AXIS));
-        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.LINE_AXIS));
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
 
         title.setText("Waiting shutdown, please wait...");
         title.setHorizontalAlignment(SwingConstants.CENTER);
@@ -147,40 +150,29 @@ public class UpdateFrame extends JFrame
             }
         });
 
-        labelPanel.add(Box.createHorizontalStrut(30));
         labelPanel.add(Box.createHorizontalGlue());
         labelPanel.add(title);
         labelPanel.add(Box.createHorizontalGlue());
-        labelPanel.add(Box.createHorizontalStrut(30));
 
-        progressPanel.add(Box.createHorizontalStrut(10));
         progressPanel.add(Box.createHorizontalGlue());
         progressPanel.add(progress);
         progressPanel.add(Box.createHorizontalGlue());
-        progressPanel.add(Box.createHorizontalStrut(10));
 
-        infoPanel.add(Box.createHorizontalStrut(5));
-        infoPanel.add(Box.createHorizontalGlue());
-        infoPanel.add(new JScrollPane(infos));
-        infoPanel.add(Box.createHorizontalGlue());
-        infoPanel.add(Box.createHorizontalStrut(5));
+        topPanel.add(labelPanel);
+        topPanel.add(progressPanel);
 
-        buttonPanel.add(Box.createHorizontalGlue());
-        buttonPanel.add(closeBtn);
-        buttonPanel.add(Box.createHorizontalGlue());
+        mainPanel.add(new JScrollPane(infos), BorderLayout.CENTER);
 
-        mainPanel.add(labelPanel);
-        mainPanel.add(Box.createVerticalStrut(5));
-        mainPanel.add(progressPanel);
-        mainPanel.add(Box.createVerticalStrut(5));
-        mainPanel.add(infoPanel);
-        mainPanel.add(Box.createVerticalStrut(5));
-        mainPanel.add(buttonPanel);
+        bottomPanel.add(Box.createHorizontalGlue());
+        bottomPanel.add(closeBtn);
+        bottomPanel.add(Box.createHorizontalGlue());
 
-        add(mainPanel);
+        add(topPanel, BorderLayout.NORTH);
+        add(mainPanel, BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
 
-        pack();
         validate();
+        pack();
     }
 
     @Override
