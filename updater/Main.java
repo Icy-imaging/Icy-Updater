@@ -149,7 +149,7 @@ public class Main
 
     public static boolean doUpdate()
     {
-        final ArrayList<ElementDescriptor> localElements = Updater.getLocalElements();
+        ArrayList<ElementDescriptor> localElements = Updater.getLocalElements();
         final ArrayList<ElementDescriptor> updateElements = Updater.getUpdateElements(localElements);
         boolean result = true;
 
@@ -172,6 +172,11 @@ public class Main
             // update element
             if (!Updater.udpateElement(updateElement, localElements))
             {
+                // an error happened
+                localElements = Updater.getLocalElements();
+                // remove the faulty element informations, this will force update next time.
+                Updater.clearElementInfos(updateElement, localElements);
+
                 // error while updating, no need to go further...
                 result = false;
                 break;
@@ -202,6 +207,12 @@ public class Main
                         .println("Some files cannot be restored, try to restore them manually from 'backup' directory.");
                 System.err.println("If ICY doesn't start anymore you may need to reinstall the application.");
             }
+
+            // validate elements
+            Updater.validateElements(localElements);
+            // and save them
+            if (!Updater.saveElementsToXML(localElements, Updater.VERSION_NAME, false))
+                System.err.println("Error while saving " + Updater.VERSION_NAME + " file.");
         }
         else
         {
