@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar"
+	name="Create Runnable Jar for Project Icy-Updater with Jar-in-Jar Loader">
+	<!--this file was created by Eclipse Runnable JAR Export Wizard -->
+	<!--ANT 1.7 is required -->
+	<target name="create_run_jar">
+		<jar destfile="${basedir}/updater.jar">
+			<manifest>
+				<attribute name="Specification-Title" value="Icy" />
+				<attribute name="Specification-Vendor" value="Institut Pasteur" />
+				<attribute name="Implementation-Vendor" value="Institut Pasteur" />
+				<attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader" />
+				<attribute name="Rsrc-Main-Class" value="updater.Main" />
+				<attribute name="Class-Path" value="." />
+				<attribute name="Rsrc-Class-Path" value="./ icycommon.jar" />
+			</manifest>
+			<zipfileset src="jar-in-jar-loader.zip" />
+			<fileset dir="D:/Stephane/Documents/dev/GIT/Icy-Updater" includes="updater/*" />
+			<zipfileset dir="D:\Stephane\Documents\dev\GIT\Icy-Updater\lib"
+				includes="icycommon.jar" />
+		</jar>
+	</target>
+</project>
