@@ -220,4 +220,9 @@ public class UpdateFrame extends JFrame
         progress.setVisible(value);
     }
 
+    public String getLog()
+    {
+        return infos.getText();
+    }
+
 }
