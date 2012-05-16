@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Specification-Title: Icy Updater
+Specification-Vendor: Institut Pasteur
+Implementation-Vendor: Institut Pasteur
+Class-Path: .
+Main-Class: updater.Main
