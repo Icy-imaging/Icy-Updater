@@ -3,9 +3,12 @@
  */
 package updater;
 
+import icy.common.Version;
 import icy.file.FileUtil;
+import icy.network.NetworkUtil;
 import icy.preferences.GeneralPreferences;
 import icy.preferences.IcyPreferences;
+import icy.system.IcyExceptionHandler;
 import icy.system.SystemUtil;
 import icy.system.thread.ThreadUtil;
 import icy.update.ElementDescriptor;
@@ -16,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author stephane
@@ -44,6 +48,11 @@ public class Main
     private static final String PARAM_MAX_MEMORY = "-Xmx";
     private static final String PARAM_STACK_SIZE = "-Xss";
 
+    /**
+     * Updater Version
+     */
+    public static Version version = new Version("1.4.0.0");
+
     static UpdateFrame frame = null;
     static String extraArgs = "";
 
@@ -57,6 +66,9 @@ public class Main
         boolean oldVersion = false;
         boolean start = true;
         boolean update;
+
+        // enable proxy
+        NetworkUtil.enableSystemProxy();
 
         for (String arg : args)
             if (arg.equals(ARG_RESTART))
@@ -213,6 +225,9 @@ public class Main
             // and save them
             if (!Updater.saveElementsToXML(localElements, Updater.VERSION_NAME, false))
                 System.err.println("Error while saving " + Updater.VERSION_NAME + " file.");
+
+            // send report of the error
+            report(frame.getLog());
         }
         else
         {
@@ -237,8 +252,8 @@ public class Main
 
                 if (!Updater.saveElementsToXML(localElements, Updater.VERSION_NAME, false))
                 {
-                    System.err.println("Error while saving " + Updater.VERSION_NAME + " file.");
-                    System.out.println("The new version is correctly installed but your version informations");
+                    System.out.println("Error while saving " + Updater.VERSION_NAME + " file.");
+                    System.out.println("The new version is correctly installed but version number informations");
                     System.out.println("will stay outdated until the next update.");
                 }
                 else
@@ -423,5 +438,22 @@ public class Main
         }
 
         return true;
+    }
+
+    /**
+     * Report an error log to the Icy web site.
+     * 
+     * @param errorLog
+     *        Error log to report.
+     */
+    private static void report(String errorLog)
+    {
+        final HashMap<String, String> values = new HashMap<String, String>();
+
+        values.put(IcyExceptionHandler.ID_PLUGINCLASSNAME, "");
+        values.put(IcyExceptionHandler.ID_ERRORLOG, "Updater version " + version + "\n\n" + errorLog);
+
+        // send report
+        NetworkUtil.report(values);
     }
 }
