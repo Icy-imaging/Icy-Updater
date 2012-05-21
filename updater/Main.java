@@ -51,7 +51,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.4.0.0");
+    public static Version version = new Version("1.4.1.0");
 
     static UpdateFrame frame = null;
     static String extraArgs = "";
