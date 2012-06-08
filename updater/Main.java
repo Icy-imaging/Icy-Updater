@@ -51,7 +51,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.4.1.0");
+    public static Version version = new Version("1.5.0.0");
 
     static UpdateFrame frame = null;
     static String extraArgs = "";
@@ -133,22 +133,17 @@ public class Main
         {
             System.err.println("Error : File " + ICY_JARNAME + " is locked !");
             System.err.println("Aborting...");
+
+            // send report of the error
+            report(frame.getLog());
+
             return false;
         }
 
-        boolean result;
+        final boolean result;
 
         if (update)
-        {
-            if (!waitForLock(Updater.UPDATE_NAME))
-            {
-                System.err.println("Error : File " + Updater.UPDATE_NAME + " is locked !");
-                System.err.println("Can't update, aborting...");
-                return false;
-            }
-
             result = doUpdate();
-        }
         else
             result = true;
 
@@ -164,7 +159,7 @@ public class Main
         ArrayList<ElementDescriptor> localElements = Updater.getLocalElements();
         final ArrayList<ElementDescriptor> updateElements = Updater.getUpdateElements(localElements);
         boolean result = true;
-
+        
         // get list of element to update
         for (ElementDescriptor updateElement : updateElements)
         {
