@@ -6,7 +6,7 @@ package updater;
 import icy.common.Version;
 import icy.file.FileUtil;
 import icy.network.NetworkUtil;
-import icy.preferences.GeneralPreferences;
+import icy.preferences.ApplicationPreferences;
 import icy.preferences.IcyPreferences;
 import icy.system.IcyExceptionHandler;
 import icy.system.SystemUtil;
@@ -51,7 +51,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.5.0.0");
+    public static Version version = new Version("1.5.1.0");
 
     static UpdateFrame frame = null;
     static String extraArgs = "";
@@ -159,7 +159,7 @@ public class Main
         ArrayList<ElementDescriptor> localElements = Updater.getLocalElements();
         final ArrayList<ElementDescriptor> updateElements = Updater.getUpdateElements(localElements);
         boolean result = true;
-        
+
         // get list of element to update
         for (ElementDescriptor updateElement : updateElements)
         {
@@ -267,10 +267,10 @@ public class Main
     private static String getVMParams()
     {
         // get JVM parameters stored in preferences
-        final int maxMemory = GeneralPreferences.getMaxMemoryMB();
-        final int stackSize = GeneralPreferences.getStackSizeKB();
-        final String vmParams = GeneralPreferences.getExtraVMParams();
-        final String osVmParams = GeneralPreferences.getOSExtraVMParams();
+        final int maxMemory = ApplicationPreferences.getMaxMemoryMB();
+        final int stackSize = ApplicationPreferences.getStackSizeKB();
+        final String vmParams = ApplicationPreferences.getExtraVMParams();
+        final String osVmParams = ApplicationPreferences.getOSExtraVMParams();
 
         String result = "";
 
@@ -289,7 +289,7 @@ public class Main
     private static String getAppParams()
     {
         // get app parameters stored in preferences
-        return GeneralPreferences.getAppParams();
+        return ApplicationPreferences.getAppParams();
     }
 
     public static boolean startICY()
