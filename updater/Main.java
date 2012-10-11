@@ -8,7 +8,6 @@ import icy.file.FileUtil;
 import icy.network.NetworkUtil;
 import icy.preferences.ApplicationPreferences;
 import icy.preferences.IcyPreferences;
-import icy.system.IcyExceptionHandler;
 import icy.system.SystemUtil;
 import icy.system.thread.ThreadUtil;
 import icy.update.ElementDescriptor;
@@ -51,7 +50,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.6.0.0");
+    public static Version version = new Version("1.6.1.0");
 
     static UpdateFrame frame = null;
     static String extraArgs = "";
@@ -62,14 +61,16 @@ public class Main
      */
     public static void main(String[] args)
     {
-        // try to detect if old ICY request update
         boolean oldVersion = false;
         boolean start = true;
         boolean update;
 
-        // enable proxy
-        NetworkUtil.enableSystemProxy();
+        // load preferences
+        IcyPreferences.init();
+        // update proxy setting
+        NetworkUtil.updateNetworkSetting();
 
+        // detect if old ICY request update
         for (String arg : args)
             if (arg.equals(ARG_RESTART))
                 oldVersion = true;
@@ -128,10 +129,15 @@ public class Main
             }
         });
 
+        // get ICY directory path
+        final String directory = new File(ClassLoader.getSystemClassLoader().getResource(".").getPath())
+                .getAbsolutePath();
+        final String icyJarPath = directory + File.separator + ICY_JARNAME;
+
         // wait for lock
-        if (!waitForLock(ICY_JARNAME))
+        if (!waitForLock(icyJarPath))
         {
-            System.err.println("Error : File " + ICY_JARNAME + " is locked !");
+            System.err.println("Error : File " + icyJarPath + " is locked !");
             System.err.println("Aborting...");
 
             // send report of the error
@@ -149,11 +155,15 @@ public class Main
 
         // start ICY
         if (result && start)
-            return startICY();
+            return startICY(directory, icyJarPath);
 
         return result;
     }
 
+    /**
+     * Process the update.<br>
+     * Working directory should be the ICY directory else update won't work.
+     */
     public static boolean doUpdate()
     {
         ArrayList<ElementDescriptor> localElements = Updater.getLocalElements();
@@ -292,21 +302,19 @@ public class Main
         return ApplicationPreferences.getAppParams();
     }
 
-    public static boolean startICY()
+    public static boolean startICY(String directory, String icyJarPath)
     {
         setState("Launching ICY...", 0);
         frame.setProgressVisible(false);
 
-        // load preferences
-        IcyPreferences.init();
         // start icy
-        final Process process = SystemUtil.execJAR(ICY_JARNAME, getVMParams(), getAppParams() + extraArgs);
+        final Process process = SystemUtil.execJAR(icyJarPath, getVMParams(), getAppParams() + extraArgs, directory);
 
         // process not even created --> critical error
         if (process == null)
         {
-            System.err.println("Can't launch execJAR(" + ICY_JARNAME + ", " + getVMParams() + ", " + getAppParams()
-                    + ", " + extraArgs + ")");
+            System.err.println("Can't launch execJAR(" + icyJarPath + ", " + getVMParams() + ", " + getAppParams()
+                    + extraArgs + "," + directory + ")");
             return false;
         }
 
@@ -323,12 +331,14 @@ public class Main
                 try
                 {
                     setState("Error while launching ICY", 0);
-                    System.err.println("Error while launching execJAR(" + ICY_JARNAME + ", " + getVMParams() + ", "
-                            + getAppParams() + ", " + extraArgs + ")");
+                    System.err.println("Can't launch execJAR(" + icyJarPath + ", " + getVMParams() + ", "
+                            + getAppParams() + extraArgs + "," + directory + ")");
                     System.err.println(stderr.readLine());
                     if (stderr.ready())
                         System.err.println(stderr.readLine());
-                    System.err.println("Trying to launch without specific parameters...");
+                    System.out.println();
+                    System.out.println("Trying to launch without specific parameters...");
+                    System.out.println();
                 }
                 catch (Exception e)
                 {
@@ -336,7 +346,7 @@ public class Main
 
                 }
 
-                return startICYSafeMode();
+                return startICYSafeMode(directory, icyJarPath);
             }
         }
         catch (IllegalThreadStateException e)
@@ -347,18 +357,18 @@ public class Main
         return true;
     }
 
-    public static boolean startICYSafeMode()
+    public static boolean startICYSafeMode(String directory, String icyJarPath)
     {
         setState("Launching ICY (safe mode)...", 0);
         frame.setProgressVisible(false);
 
         // start icy in safe mode (no parameters)
-        final Process process = SystemUtil.execJAR(ICY_JARNAME);
+        final Process process = SystemUtil.execJAR(icyJarPath, "", "", directory);
 
         // process not even created --> critical error
         if (process == null)
         {
-            System.err.println("Can't launch execJAR(" + ICY_JARNAME + ")");
+            System.err.println("Can't launch execJAR(" + icyJarPath + ", \"\", \"\", " + directory + ")");
             System.out.println();
             System.out.println("Try to manually launch the following command :");
             System.out.println("java -jar updater.jar");
@@ -378,7 +388,7 @@ public class Main
                 try
                 {
                     setState("Error while launching ICY (safe mode)", 0);
-                    System.err.println("Error while launching execJAR(" + ICY_JARNAME + ")");
+                    System.err.println("Can't launch execJAR(" + icyJarPath + ", \"\", \"\", " + directory + ")");
                     System.err.println(stderr.readLine());
                     if (stderr.ready())
                         System.err.println(stderr.readLine());
@@ -445,8 +455,8 @@ public class Main
     {
         final HashMap<String, String> values = new HashMap<String, String>();
 
-        values.put(IcyExceptionHandler.ID_PLUGINCLASSNAME, "");
-        values.put(IcyExceptionHandler.ID_ERRORLOG, "Updater version " + version + "\n\n" + errorLog);
+        values.put(NetworkUtil.ID_PLUGINCLASSNAME, "");
+        values.put(NetworkUtil.ID_ERRORLOG, "Updater version " + version + "\n\n" + errorLog);
 
         // send report
         NetworkUtil.report(values);
