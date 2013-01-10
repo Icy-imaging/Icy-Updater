@@ -17,6 +17,8 @@ import icy.util.StringUtil;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -50,7 +52,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.6.2.0");
+    public static Version version = new Version("1.6.2.1");
 
     static UpdateFrame frame = null;
     static String extraArgs = "";
@@ -104,6 +106,10 @@ public class Main
                 extraArgs = extraArgs + " " + arg;
         }
 
+        update = false;
+        start = true;
+        
+
         // no error --> we can exit
         if (process(update, start))
         {
@@ -130,8 +136,18 @@ public class Main
         });
 
         // get ICY directory path
-        final String directory = new File(ClassLoader.getSystemClassLoader().getResource(".").getPath())
-                .getAbsolutePath();
+        String directory = new File(ClassLoader.getSystemClassLoader().getResource(".").getPath()).getAbsolutePath();
+
+        try
+        {
+            // so we replace any %20 sequence in space
+            directory = URLDecoder.decode(directory, "UTF-8");
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            // ignore
+        }
+
         final String icyJarPath = directory + File.separator + ICY_JARNAME;
 
         // wait for lock
@@ -155,7 +171,7 @@ public class Main
 
         // start ICY
         if (result && start)
-            return startICY(directory, icyJarPath);
+            return startICY(directory);//, icyJarPath);
 
         return result;
     }
@@ -302,18 +318,18 @@ public class Main
         return ApplicationPreferences.getAppParams();
     }
 
-    public static boolean startICY(String directory, String icyJarPath)
+    public static boolean startICY(String directory)//, String icyJarPath)
     {
         setState("Launching ICY...", 0);
         frame.setProgressVisible(false);
 
         // start icy
-        final Process process = SystemUtil.execJAR(icyJarPath, getVMParams(), getAppParams() + extraArgs, directory);
+        final Process process = SystemUtil.execJAR(ICY_JARNAME, getVMParams(), getAppParams() + extraArgs, directory);
 
         // process not even created --> critical error
         if (process == null)
         {
-            System.err.println("Can't launch execJAR(" + icyJarPath + ", " + getVMParams() + ", " + getAppParams()
+            System.err.println("Can't launch execJAR(" + ICY_JARNAME + ", " + getVMParams() + ", " + getAppParams()
                     + extraArgs + "," + directory + ")");
             return false;
         }
@@ -331,7 +347,7 @@ public class Main
                 try
                 {
                     setState("Error while launching ICY", 0);
-                    System.err.println("Can't launch execJAR(" + icyJarPath + ", " + getVMParams() + ", "
+                    System.err.println("Can't launch execJAR(" + ICY_JARNAME + ", " + getVMParams() + ", "
                             + getAppParams() + extraArgs + "," + directory + ")");
                     System.err.println(stderr.readLine());
                     if (stderr.ready())
@@ -346,7 +362,7 @@ public class Main
 
                 }
 
-                return startICYSafeMode(directory, icyJarPath);
+                return startICYSafeMode(directory);//, ICY_JARNAME);
             }
         }
         catch (IllegalThreadStateException e)
@@ -357,18 +373,18 @@ public class Main
         return true;
     }
 
-    public static boolean startICYSafeMode(String directory, String icyJarPath)
+    public static boolean startICYSafeMode(String directory)//, String icyJarPath)
     {
         setState("Launching ICY (safe mode)...", 0);
         frame.setProgressVisible(false);
 
         // start icy in safe mode (no parameters)
-        final Process process = SystemUtil.execJAR(icyJarPath, "", "", directory);
+        final Process process = SystemUtil.execJAR(ICY_JARNAME, "", "", directory);
 
         // process not even created --> critical error
         if (process == null)
         {
-            System.err.println("Can't launch execJAR(" + icyJarPath + ", \"\", \"\", " + directory + ")");
+            System.err.println("Can't launch execJAR(" + ICY_JARNAME + ", \"\", \"\", " + directory + ")");
             System.out.println();
             System.out.println("Try to manually launch the following command :");
             System.out.println("java -jar updater.jar");
@@ -388,7 +404,7 @@ public class Main
                 try
                 {
                     setState("Error while launching ICY (safe mode)", 0);
-                    System.err.println("Can't launch execJAR(" + icyJarPath + ", \"\", \"\", " + directory + ")");
+                    System.err.println("Can't launch execJAR(" + ICY_JARNAME + ", \"\", \"\", " + directory + ")");
                     System.err.println(stderr.readLine());
                     if (stderr.ready())
                         System.err.println(stderr.readLine());
