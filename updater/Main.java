@@ -106,10 +106,6 @@ public class Main
                 extraArgs = extraArgs + " " + arg;
         }
 
-        update = false;
-        start = true;
-        
-
         // no error --> we can exit
         if (process(update, start))
         {
@@ -171,7 +167,7 @@ public class Main
 
         // start ICY
         if (result && start)
-            return startICY(directory);//, icyJarPath);
+            return startICY(directory);
 
         return result;
     }
@@ -318,7 +314,7 @@ public class Main
         return ApplicationPreferences.getAppParams();
     }
 
-    public static boolean startICY(String directory)//, String icyJarPath)
+    public static boolean startICY(String directory)
     {
         setState("Launching ICY...", 0);
         frame.setProgressVisible(false);
@@ -373,7 +369,7 @@ public class Main
         return true;
     }
 
-    public static boolean startICYSafeMode(String directory)//, String icyJarPath)
+    public static boolean startICYSafeMode(String directory)
     {
         setState("Launching ICY (safe mode)...", 0);
         frame.setProgressVisible(false);
