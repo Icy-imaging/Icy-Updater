@@ -52,7 +52,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.6.2.1");
+    public static Version version = new Version("1.6.3.0");
 
     static UpdateFrame frame = null;
     static String extraArgs = "";
@@ -201,7 +201,7 @@ public class Main
             // update element
             if (!Updater.udpateElement(updateElement, localElements))
             {
-                // an error happened
+                // an error happened --> take back current local elements 
                 localElements = Updater.getLocalElements();
                 // remove the faulty element informations, this will force update next time.
                 Updater.clearElementInfos(updateElement, localElements);
@@ -214,6 +214,7 @@ public class Main
 
         // some files hasn't be updated ?
         setState("Checking...", 60);
+        
         if (!result)
         {
             System.err.println("Update processing has failed.");
