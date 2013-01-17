@@ -52,7 +52,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.6.2.1");
+    public static Version version = new Version("1.6.3.0");
 
     static UpdateFrame frame = null;
     static String extraArgs = "";
@@ -149,8 +149,7 @@ public class Main
         // wait for lock
         if (!waitForLock(icyJarPath))
         {
-            System.err.println("Error : File " + icyJarPath + " is locked !");
-            System.err.println("Aborting...");
+            System.err.println("File " + icyJarPath + " is locked, aborting udpate...");
 
             // send report of the error
             report(frame.getLog());
@@ -201,7 +200,7 @@ public class Main
             // update element
             if (!Updater.udpateElement(updateElement, localElements))
             {
-                // an error happened
+                // an error happened --> take back current local elements
                 localElements = Updater.getLocalElements();
                 // remove the faulty element informations, this will force update next time.
                 Updater.clearElementInfos(updateElement, localElements);
@@ -214,6 +213,7 @@ public class Main
 
         // some files hasn't be updated ?
         setState("Checking...", 60);
+
         if (!result)
         {
             System.err.println("Update processing has failed.");
@@ -358,7 +358,7 @@ public class Main
 
                 }
 
-                return startICYSafeMode(directory);//, ICY_JARNAME);
+                return startICYSafeMode(directory);// , ICY_JARNAME);
             }
         }
         catch (IllegalThreadStateException e)
@@ -444,12 +444,23 @@ public class Main
         final long start = System.currentTimeMillis();
         final File f = new File(lockName);
 
+        // may help
+        if (!f.setWritable(true, false))
+            f.setWritable(true, true);
+
         // ensure lock exist
         if (f.exists())
         {
             // wait while file is lock (we wait 15 seconds at max)
             while ((!f.canWrite()) && ((System.currentTimeMillis() - start) < (15 * 1000)))
+            {
+                System.gc();
                 ThreadUtil.sleep(100);
+
+                // may help
+                if (!f.setWritable(true, false))
+                    f.setWritable(true, true);
+            }
 
             return f.canWrite();
         }
