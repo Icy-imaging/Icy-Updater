@@ -132,8 +132,7 @@ public class Main
         });
 
         // get ICY directory path
-        String directory = new File(ClassLoader.getSystemClassLoader().getResource(".").getPath()).getAbsolutePath();
-
+        String directory = new File(System.getProperty("user.dir")).getAbsolutePath();
         try
         {
             // so we replace any %20 sequence in space
