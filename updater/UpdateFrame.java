@@ -31,39 +31,6 @@ import javax.swing.text.StyleConstants;
  */
 public class UpdateFrame extends JFrame
 {
-    class OutPrintStream extends PrintStream
-    {
-        boolean isStdErr;
-
-        public OutPrintStream(PrintStream out, boolean isStdErr)
-        {
-            super(out);
-
-            this.isStdErr = isStdErr;
-        }
-
-        @Override
-        public void write(byte[] buf, int off, int len)
-        {
-            super.write(buf, off, len);
-
-            if (buf == null)
-            {
-                throw new NullPointerException();
-            }
-            else if ((off < 0) || (off > buf.length) || (len < 0) || ((off + len) > buf.length) || ((off + len) < 0))
-            {
-                throw new IndexOutOfBoundsException();
-            }
-            else if (len == 0)
-            {
-                return;
-            }
-
-            addMessage(new String(buf, off, len), isStdErr);
-        }
-    }
-
     /**
      * 
      */
@@ -76,12 +43,6 @@ public class UpdateFrame extends JFrame
     final JProgressBar progress = new JProgressBar();
     final JTextArea infos = new JTextArea();
     final JButton closeBtn = new JButton("close");
-
-    /**
-     * 
-     */
-    private final OutPrintStream stdStream = new OutPrintStream(System.out, false);
-    private final OutPrintStream errStream = new OutPrintStream(System.err, true);
 
     /**
      * @param title
@@ -99,10 +60,6 @@ public class UpdateFrame extends JFrame
         setLocation(150, 150);
 
         build();
-
-        // redirect stdOut and errOut
-        System.setOut(stdStream);
-        System.setErr(errStream);
     }
 
     public void build()
@@ -219,10 +176,4 @@ public class UpdateFrame extends JFrame
     {
         progress.setVisible(value);
     }
-
-    public String getLog()
-    {
-        return infos.getText();
-    }
-
 }
