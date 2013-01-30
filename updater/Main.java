@@ -18,8 +18,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -185,18 +183,8 @@ public class Main
             }
         });
 
-        // get ICY directory path
-        String directory = new File(System.getProperty("user.dir")).getAbsolutePath();
-        try
-        {
-            // so we replace any %20 sequence in space
-            directory = URLDecoder.decode(directory, "UTF-8");
-        }
-        catch (UnsupportedEncodingException e)
-        {
-            // ignore
-        }
-
+        // get Icy directory and path
+        final String directory = FileUtil.getCurrentDirectory();
         final String icyJarPath = directory + File.separator + ICY_JARNAME;
 
         // wait for lock
@@ -255,7 +243,8 @@ public class Main
             {
                 // an error happened --> take back current local elements
                 localElements = Updater.getLocalElements();
-                // remove the faulty element informations, this will force update next time.
+                // remove the faulty element informations, this will force
+                // update next time.
                 Updater.clearElementInfos(updateElement, localElements);
 
                 // error while updating, no need to go further...
