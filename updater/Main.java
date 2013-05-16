@@ -59,8 +59,7 @@ public class Main
 
             final String str = new String(buf, off, len);
 
-            strLog += str + "\n";
-
+            strLog += str;
             if (frame != null)
                 frame.addMessage(str, isStdErr);
         }
@@ -89,7 +88,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.6.5.0");
+    public static Version version = new Version("1.6.7.0");
 
     static final OutPrintStream stdStream = new OutPrintStream(System.out, false);
     static final OutPrintStream errStream = new OutPrintStream(System.err, true);
