@@ -1,7 +1,7 @@
 /**
  * 
  */
-package updater;
+package icy.updater;
 
 import icy.common.Version;
 import icy.file.FileUtil;
@@ -88,7 +88,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.6.7.0");
+    public static Version version = new Version("1.6.8.0");
 
     static final OutPrintStream stdStream = new OutPrintStream(System.out, false);
     static final OutPrintStream errStream = new OutPrintStream(System.err, true);

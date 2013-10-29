@@ -3,4 +3,4 @@ Specification-Title: Icy Updater
 Specification-Vendor: Institut Pasteur
 Implementation-Vendor: Institut Pasteur
 Class-Path: .
-Main-Class: updater.Main
+Main-Class: icy.updater.Main

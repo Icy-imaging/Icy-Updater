@@ -1,7 +1,7 @@
 /**
  * 
  */
-package updater;
+package icy.updater;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
