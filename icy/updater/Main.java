@@ -1,7 +1,7 @@
 /**
  * 
  */
-package updater;
+package icy.updater;
 
 import icy.common.Version;
 import icy.file.FileUtil;
@@ -17,8 +17,7 @@ import icy.util.StringUtil;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -28,6 +27,43 @@ import java.util.HashMap;
 public class Main
 {
     // private static final String ICY_MAINCLASS = "icy.main.Icy";
+
+    static class OutPrintStream extends PrintStream
+    {
+        boolean isStdErr;
+
+        public OutPrintStream(PrintStream out, boolean isStdErr)
+        {
+            super(out);
+
+            this.isStdErr = isStdErr;
+        }
+
+        @Override
+        public void write(byte[] buf, int off, int len)
+        {
+            super.write(buf, off, len);
+
+            if (buf == null)
+            {
+                throw new NullPointerException();
+            }
+            else if ((off < 0) || (off > buf.length) || (len < 0) || ((off + len) > buf.length) || ((off + len) < 0))
+            {
+                throw new IndexOutOfBoundsException();
+            }
+            else if (len == 0)
+            {
+                return;
+            }
+
+            final String str = new String(buf, off, len);
+
+            strLog += str;
+            if (frame != null)
+                frame.addMessage(str, isStdErr);
+        }
+    }
 
     /**
      * Keep for older version compatibility
@@ -52,10 +88,15 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.6.3.0");
+    public static Version version = new Version("1.6.8.0");
+
+    static final OutPrintStream stdStream = new OutPrintStream(System.out, false);
+    static final OutPrintStream errStream = new OutPrintStream(System.err, true);
 
     static UpdateFrame frame = null;
     static String extraArgs = "";
+
+    static String strLog = "";
 
     /**
      * @param args
@@ -106,13 +147,18 @@ public class Main
                 extraArgs = extraArgs + " " + arg;
         }
 
+        // redirect stdOut and errOut
+        System.setOut(stdStream);
+        System.setErr(errStream);
+
         // no error --> we can exit
         if (process(update, start))
         {
-            frame.dispose();
+            if (frame != null)
+                frame.dispose();
             System.exit(0);
         }
-        else
+        else if (frame != null)
             frame.setCanClose(true);
     }
 
@@ -124,26 +170,20 @@ public class Main
             @Override
             public void run()
             {
-                frame = new UpdateFrame("ICY Updater");
-                // update --> show progress frame immediately
-                if (update)
-                    frame.setVisible(true);
+                if (SystemUtil.isHeadLess())
+                    frame = null;
+                else
+                {
+                    frame = new UpdateFrame("ICY Updater");
+                    // update --> show progress frame immediately
+                    if (update)
+                        frame.setVisible(true);
+                }
             }
         });
 
-        // get ICY directory path
-        String directory = new File(ClassLoader.getSystemClassLoader().getResource(".").getPath()).getAbsolutePath();
-
-        try
-        {
-            // so we replace any %20 sequence in space
-            directory = URLDecoder.decode(directory, "UTF-8");
-        }
-        catch (UnsupportedEncodingException e)
-        {
-            // ignore
-        }
-
+        // get Icy directory and path
+        final String directory = FileUtil.getCurrentDirectory();
         final String icyJarPath = directory + File.separator + ICY_JARNAME;
 
         // wait for lock
@@ -152,7 +192,7 @@ public class Main
             System.err.println("File " + icyJarPath + " is locked, aborting udpate...");
 
             // send report of the error
-            report(frame.getLog());
+            report(strLog);
 
             return false;
         }
@@ -202,7 +242,8 @@ public class Main
             {
                 // an error happened --> take back current local elements
                 localElements = Updater.getLocalElements();
-                // remove the faulty element informations, this will force update next time.
+                // remove the faulty element informations, this will force
+                // update next time.
                 Updater.clearElementInfos(updateElement, localElements);
 
                 // error while updating, no need to go further...
@@ -244,7 +285,7 @@ public class Main
                 System.err.println("Error while saving " + Updater.VERSION_NAME + " file.");
 
             // send report of the error
-            report(frame.getLog());
+            report(strLog);
         }
         else
         {
@@ -317,7 +358,8 @@ public class Main
     public static boolean startICY(String directory)
     {
         setState("Launching ICY...", 0);
-        frame.setProgressVisible(false);
+        if (frame != null)
+            frame.setProgressVisible(false);
 
         // start icy
         final Process process = SystemUtil.execJAR(ICY_JARNAME, getVMParams(), getAppParams() + extraArgs, directory);
@@ -372,7 +414,8 @@ public class Main
     public static boolean startICYSafeMode(String directory)
     {
         setState("Launching ICY (safe mode)...", 0);
-        frame.setProgressVisible(false);
+        if (frame != null)
+            frame.setProgressVisible(false);
 
         // start icy in safe mode (no parameters)
         final Process process = SystemUtil.execJAR(ICY_JARNAME, "", "", directory);
@@ -433,8 +476,11 @@ public class Main
             @Override
             public void run()
             {
-                frame.setTitle(state);
-                frame.setProgress(progress);
+                if (frame != null)
+                {
+                    frame.setTitle(state);
+                    frame.setProgress(progress);
+                }
             }
         });
     }
