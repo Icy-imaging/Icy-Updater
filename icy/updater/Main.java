@@ -88,7 +88,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.6.8.0");
+    public static Version version = new Version("1.6.9.0");
 
     static final OutPrintStream stdStream = new OutPrintStream(System.out, false);
     static final OutPrintStream errStream = new OutPrintStream(System.err, true);
@@ -155,7 +155,12 @@ public class Main
         if (process(update, start))
         {
             if (frame != null)
+            {
+                // we got some error messages on starting so we wait for 5 seconds before closing frame
+                if (!update && frame.isVisible())
+                    ThreadUtil.sleep(5000);
                 frame.dispose();
+            }
             System.exit(0);
         }
         else if (frame != null)
@@ -174,7 +179,7 @@ public class Main
                     frame = null;
                 else
                 {
-                    frame = new UpdateFrame("ICY Updater");
+                    frame = new UpdateFrame("Icy Updater");
                     // update --> show progress frame immediately
                     if (update)
                         frame.setVisible(true);
@@ -183,7 +188,7 @@ public class Main
         });
 
         // get Icy directory and path
-        final String directory = FileUtil.getCurrentDirectory();
+        final String directory = FileUtil.getApplicationDirectory();
         final String icyJarPath = directory + File.separator + ICY_JARNAME;
 
         // wait for lock
@@ -275,7 +280,7 @@ public class Main
                 System.err.println("");
                 System.err
                         .println("Some files cannot be restored, try to restore them manually from 'backup' directory.");
-                System.err.println("If ICY doesn't start anymore you may need to reinstall the application.");
+                System.err.println("If Icy doesn't start anymore you may need to reinstall the application.");
             }
 
             // validate elements
@@ -357,7 +362,7 @@ public class Main
 
     public static boolean startICY(String directory)
     {
-        setState("Launching ICY...", 0);
+        setState("Launching Icy...", 0);
         if (frame != null)
             frame.setProgressVisible(false);
 
@@ -384,7 +389,7 @@ public class Main
 
                 try
                 {
-                    setState("Error while launching ICY", 0);
+                    setState("Error while launching Icy", 0);
                     System.err.println("Can't launch execJAR(" + ICY_JARNAME + ", " + getVMParams() + ", "
                             + getAppParams() + extraArgs + "," + directory + ")");
                     System.err.println(stderr.readLine());
@@ -413,7 +418,7 @@ public class Main
 
     public static boolean startICYSafeMode(String directory)
     {
-        setState("Launching ICY (safe mode)...", 0);
+        setState("Launching Icy (safe mode)...", 0);
         if (frame != null)
             frame.setProgressVisible(false);
 
@@ -442,7 +447,7 @@ public class Main
 
                 try
                 {
-                    setState("Error while launching ICY (safe mode)", 0);
+                    setState("Error while launching Icy (safe mode)", 0);
                     System.err.println("Can't launch execJAR(" + ICY_JARNAME + ", \"\", \"\", " + directory + ")");
                     System.err.println(stderr.readLine());
                     if (stderr.ready())
