@@ -88,7 +88,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.6.12.0");
+    public static Version version = new Version("1.6.13.0");
 
     static final OutPrintStream stdStream = new OutPrintStream(System.out, false);
     static final OutPrintStream errStream = new OutPrintStream(System.err, true);
