@@ -11,7 +11,7 @@
         </sealing>
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
-        <javaElement handleIdentifier="=Icy-Updater/&lt;icy.updater"/>
         <javaElement handleIdentifier="=Icy-Updater/lib"/>
+        <javaElement handleIdentifier="=Icy-Updater/&lt;icy.updater"/>
     </selectedElements>
 </jardesc>
