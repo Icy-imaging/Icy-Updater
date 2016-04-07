@@ -20,6 +20,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author stephane
@@ -88,7 +89,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.6.14.0");
+    public static Version version = new Version("1.8.0.0");
 
     static final OutPrintStream stdStream = new OutPrintStream(System.out, false);
     static final OutPrintStream errStream = new OutPrintStream(System.err, true);
@@ -527,7 +528,7 @@ public class Main
      */
     private static void report(String errorLog)
     {
-        final HashMap<String, String> values = new HashMap<String, String>();
+        final Map<String, String> values = new HashMap<String, String>();
 
         values.put(NetworkUtil.ID_PLUGINCLASSNAME, "");
         values.put(NetworkUtil.ID_ERRORLOG, "Updater version " + version + "\n\n" + errorLog);
