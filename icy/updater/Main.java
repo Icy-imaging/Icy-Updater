@@ -20,6 +20,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author stephane
@@ -88,7 +89,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.6.14.0");
+    public static Version version = new Version("1.9.0.0");
 
     static final OutPrintStream stdStream = new OutPrintStream(System.out, false);
     static final OutPrintStream errStream = new OutPrintStream(System.err, true);
@@ -161,6 +162,7 @@ public class Main
                     ThreadUtil.sleep(5000);
                 frame.dispose();
             }
+
             System.exit(0);
         }
         else if (frame != null)
@@ -189,7 +191,7 @@ public class Main
 
         // get Icy directory and path
         final String directory = FileUtil.getApplicationDirectory();
-        final String icyJarPath = directory + File.separator + ICY_JARNAME;
+        final String icyJarPath = directory + FileUtil.separatorChar + ICY_JARNAME;
 
         // wait for lock
         if (!waitForLock(icyJarPath))
@@ -218,10 +220,30 @@ public class Main
 
     /**
      * Process the update.<br>
-     * Working directory should be the ICY directory else update won't work.
+     * Working directory should be the Icy directory else update won't work.
      */
     public static boolean doUpdate()
     {
+        setState("Checking java version", 1);
+
+        if (!checkMinimumJavaVersion(1.7))
+        {
+            System.err.println("New version of Icy requires Java 7, please update your java version !");
+            System.err.println();
+            System.err.println("You can download Java here:");
+            System.err.println("http://www.oracle.com/technetwork/java/javase/downloads/index.html");
+
+            if (SystemUtil.isWindows())
+            {
+                System.err.println();
+                System.err.println("For OSX you need to install the JDK 8:");
+                System.err
+                        .println("http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html");
+            }
+
+            return false;
+        }
+
         ArrayList<ElementDescriptor> localElements = Updater.getLocalElements();
         final ArrayList<ElementDescriptor> updateElements = Updater.getUpdateElements(localElements);
         boolean result = true;
@@ -330,6 +352,11 @@ public class Main
             setState("Failed !", 100);
 
         return result;
+    }
+
+    private static boolean checkMinimumJavaVersion(double value)
+    {
+        return SystemUtil.getJavaVersionAsNumber() >= value;
     }
 
     private static String getVMParams()
@@ -527,7 +554,7 @@ public class Main
      */
     private static void report(String errorLog)
     {
-        final HashMap<String, String> values = new HashMap<String, String>();
+        final Map<String, String> values = new HashMap<String, String>();
 
         values.put(NetworkUtil.ID_PLUGINCLASSNAME, "");
         values.put(NetworkUtil.ID_ERRORLOG, "Updater version " + version + "\n\n" + errorLog);
