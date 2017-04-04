@@ -228,9 +228,9 @@ public class Main
 
         if (!checkMinimumJavaVersion(1.7))
         {
-            System.err.println("New version of Icy requires Java 7, please update your java version !");
+            System.err.println("New version of Icy requires Java 7 or above, please update your java version.");
             System.err.println();
-            System.err.println("You can download Java here:");
+            System.err.println("You can download last Java here:");
             System.err.println("http://www.oracle.com/technetwork/java/javase/downloads/index.html");
 
             if (SystemUtil.isWindows())
