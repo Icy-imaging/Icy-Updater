@@ -3,6 +3,15 @@
  */
 package icy.updater;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 import icy.common.Version;
 import icy.file.FileUtil;
 import icy.network.NetworkUtil;
@@ -13,14 +22,6 @@ import icy.system.thread.ThreadUtil;
 import icy.update.ElementDescriptor;
 import icy.update.Updater;
 import icy.util.StringUtil;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author stephane
@@ -82,6 +83,7 @@ public class Main
     private static final String ARG_RESTART = "-restart";
 
     private static final String ICY_JARNAME = "icy.jar";
+    private static final String ICY_FOLDER_OSX = "Icy.app";
 
     private static final String PARAM_MAX_MEMORY = "-Xmx";
     private static final String PARAM_STACK_SIZE = "-Xss";
@@ -89,7 +91,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("1.9.9.0");
+    public static Version version = new Version("2.0.0.0");
 
     static final OutPrintStream stdStream = new OutPrintStream(System.out, false);
     static final OutPrintStream errStream = new OutPrintStream(System.err, true);
@@ -143,8 +145,8 @@ public class Main
         // keep trace of others arguments
         for (String arg : args)
         {
-            if (!(arg.equals(Updater.ARG_UPDATE) || arg.equals(Updater.ARG_NOSTART) || arg.equals(ARG_NOUPDATE) || arg
-                    .equals(ARG_RESTART)))
+            if (!(arg.equals(Updater.ARG_UPDATE) || arg.equals(Updater.ARG_NOSTART) || arg.equals(ARG_NOUPDATE)
+                    || arg.equals(ARG_RESTART)))
                 extraArgs = extraArgs + " " + arg;
         }
 
@@ -204,18 +206,41 @@ public class Main
             return false;
         }
 
-        final boolean result;
-
         if (update)
-            result = doUpdate();
-        else
-            result = true;
+        {
+            // do update
+            if (!doUpdate())
+                return false;
+
+            // update successful ? check we are on OSX
+            if (SystemUtil.isMac())
+            {
+                // we may want to rename Icy folder
+                final File oldFile = new File("").getAbsoluteFile();
+                final File parentFile = oldFile.getParentFile();
+                final File newFile = new File(parentFile, ICY_FOLDER_OSX).getAbsoluteFile();
+
+                // not yet done ?
+                if (!newFile.exists())
+                {
+                    // try to rename Icy folder
+                    if (!doOSXFolderNameUpdate(parentFile, oldFile, newFile))
+                        return false;
+
+                    // we cannot restart Icy the classic way so do it via the OSX app open
+                    if (start)
+                        return startICY_OSX(newFile.getAbsolutePath(), parentFile.getAbsolutePath());
+
+                    return true;
+                }
+            }
+        }
 
         // start ICY
-        if (result && start)
+        if (start)
             return startICY(directory);
 
-        return result;
+        return true;
     }
 
     /**
@@ -300,8 +325,8 @@ public class Main
             else
             {
                 System.err.println("");
-                System.err
-                        .println("Some files cannot be restored, try to restore them manually from 'backup' directory.");
+                System.err.println(
+                        "Some files cannot be restored, try to restore them manually from 'backup' directory.");
                 System.err.println("If Icy doesn't start anymore you may need to reinstall the application.");
             }
 
@@ -352,6 +377,54 @@ public class Main
             setState("Failed !", 100);
 
         return result;
+    }
+
+    /**
+     * Rename 'icy' folder to 'icy.app' for OSX if needed
+     */
+    private static boolean doOSXFolderNameUpdate(File parentFile, File oldFile, File newFile)
+    {
+        final String parentFolder = FileUtil.getGenericPath(parentFile.getAbsolutePath());
+        final String cmd = "mv " + oldFile.getAbsolutePath() + " " + newFile.getAbsolutePath();
+
+        try
+        {
+            Process p;
+
+            System.out.print("Renaming app: " + cmd);
+            // execute it from parent folder for safety
+            p = SystemUtil.exec(cmd, parentFolder);
+            if (p == null)
+                return false;
+
+            // get error code
+            System.out.println(" - exit code = " + p.waitFor());
+            // output error stream
+            outputError(p);
+            // wait a bit
+            Thread.sleep(1000);
+
+            System.out.print("Removing security check...");
+            // remove quarantine attribut from the new created icy.app
+            p = SystemUtil.exec("xattr -dr com.apple.quarantine " + newFile.getAbsolutePath(), parentFolder);
+            if (p == null)
+                return false;
+
+            // get error code
+            System.out.println(" exit code = " + p.waitFor());
+            // output error stream
+            outputError(p);
+            // wait a bit
+            Thread.sleep(1000);
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     private static boolean checkMinimumJavaVersion(double value)
@@ -411,17 +484,13 @@ public class Main
         {
             if (process.exitValue() != 0)
             {
-                // get error output and redirect it
-                final BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-
                 try
                 {
                     setState("Error while launching Icy", 0);
                     System.err.println("Can't launch execJAR(" + ICY_JARNAME + ", " + getVMParams() + ", "
                             + getAppParams() + extraArgs + "," + directory + ")");
-                    System.err.println(stderr.readLine());
-                    if (stderr.ready())
-                        System.err.println(stderr.readLine());
+                    outputError(process);
+
                     System.out.println();
                     System.out.println("Trying to launch without specific parameters...");
                     System.out.println();
@@ -432,7 +501,7 @@ public class Main
 
                 }
 
-                return startICYSafeMode(directory);// , ICY_JARNAME);
+                return startICYSafeMode(directory);
             }
         }
         catch (IllegalThreadStateException e)
@@ -469,20 +538,66 @@ public class Main
         {
             if (process.exitValue() != 0)
             {
-                // get error output and redirect it
-                final BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-
                 try
                 {
                     setState("Error while launching Icy (safe mode)", 0);
                     System.err.println("Can't launch execJAR(" + ICY_JARNAME + ", \"\", \"\", " + directory + ")");
-                    System.err.println(stderr.readLine());
-                    if (stderr.ready())
-                        System.err.println(stderr.readLine());
+                    outputError(process);
 
                     System.out.println();
                     System.out.println("Try to manually launch the following command :");
                     System.out.println("java -jar updater.jar");
+                }
+                catch (Exception e)
+                {
+                    // ignore
+
+                }
+
+                return false;
+            }
+        }
+        catch (IllegalThreadStateException e)
+        {
+            // thread not terminated, assume it's ok...
+        }
+
+        return true;
+    }
+
+    public static boolean startICY_OSX(String appPackage, String directory)
+    {
+        setState("Launching Icy (OSX mode)...", 0);
+        if (frame != null)
+            frame.setProgressVisible(false);
+
+        // start icy in safe mode (no parameters)
+        final Process process = SystemUtil.exec("open -a " + appPackage, directory);
+
+        // process not even created --> critical error
+        if (process == null)
+        {
+            System.err.println("Can't launch Icy..");
+            System.out.println();
+            System.out.println("Try to launch it manually.");
+            return false;
+        }
+
+        // wait a bit so it has sometime to compute
+        ThreadUtil.sleep(1000);
+
+        try
+        {
+            if (process.exitValue() != 0)
+            {
+                try
+                {
+                    setState("Error while launching Icy", 0);
+                    System.err.println("Can't launch Icy..");
+                    outputError(process);
+
+                    System.out.println();
+                    System.out.println("Try to launch it manually.");
                 }
                 catch (Exception e)
                 {
@@ -561,5 +676,27 @@ public class Main
 
         // send report
         NetworkUtil.report(values);
+    }
+
+    private static void outputError(Process process) throws IOException
+    {
+        // get error output and redirect it
+        final BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        String s;
+
+        try
+        {
+            do
+            {
+                s = stderr.readLine();
+                if (s != null)
+                    System.err.println(s);
+            }
+            while (s != null);
+        }
+        finally
+        {
+            stderr.close();
+        }
     }
 }
