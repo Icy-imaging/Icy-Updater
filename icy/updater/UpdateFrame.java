@@ -9,7 +9,6 @@ import java.awt.Dimension;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.PrintStream;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -20,7 +19,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
@@ -41,7 +40,7 @@ public class UpdateFrame extends JFrame
      */
     final JLabel title = new JLabel();
     final JProgressBar progress = new JProgressBar();
-    final JTextArea infos = new JTextArea();
+    final JTextPane infos = new JTextPane();
     final JButton closeBtn = new JButton("close");
 
     /**
@@ -52,6 +51,9 @@ public class UpdateFrame extends JFrame
     {
         super(title);
 
+        infos.setContentType("text/html");
+        infos.setText("<html>");
+        
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setDefaultLookAndFeelDecorated(true);
 
@@ -87,11 +89,9 @@ public class UpdateFrame extends JFrame
         title.setHorizontalAlignment(SwingConstants.CENTER);
         title.setHorizontalTextPosition(SwingConstants.CENTER);
 
-        infos.setText("");
         infos.setEditable(false);
         infos.setMinimumSize(new Dimension(540, 160));
         infos.setPreferredSize(new Dimension(540, 160));
-        infos.setLineWrap(true);
 
         progress.setMinimum(0);
         progress.setMaximum(100);
