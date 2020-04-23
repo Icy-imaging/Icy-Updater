@@ -91,7 +91,7 @@ public class Main
     /**
      * Updater Version
      */
-    public static Version version = new Version("2.0.0.0");
+    public static Version version = new Version("2.1.0.0");
 
     static final OutPrintStream stdStream = new OutPrintStream(System.out, false);
     static final OutPrintStream errStream = new OutPrintStream(System.err, true);
@@ -251,20 +251,12 @@ public class Main
     {
         setState("Checking java version", 1);
 
-        if (!checkMinimumJavaVersion(1.7))
+        if (!checkMinimumJavaVersion(8))
         {
-            System.err.println("New version of Icy requires Java 7 or above, please update your java version.");
+            System.err.println("New version of Icy requires Java 8 or above, please update your java version.");
             System.err.println();
-            System.err.println("You can download last Java here:");
-            System.err.println("http://www.oracle.com/technetwork/java/javase/downloads/index.html");
-
-            if (SystemUtil.isWindows())
-            {
-                System.err.println();
-                System.err.println("For OSX you need to install the JDK 8:");
-                System.err
-                        .println("http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html");
-            }
+            System.err.println("You can download Java 8 here:");
+            System.err.println("http://icy.bioimageanalysis.org/download/");
 
             return false;
         }
